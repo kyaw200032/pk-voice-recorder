@@ -84,6 +84,22 @@
 </header>
 <main>
   <div class="glass">
+    <div class="cardhead"><div class="icon3d gold">📜</div><div><h3>Teleprompter — ဖတ်ဖို့ စာသား</h3><p>ကိုယ်ကြိုက်တဲ့ စာသားထည့်ပြီး အပေါ်ကို အလိုအလျောက် ရွေ့သွားတာ ကြည့်ဖတ်ရုံပဲ — အသံသွင်းရင်း ဖတ်ဖို့</p></div></div>
+    <textarea id="promptInput" rows="3" placeholder="ဒီမှာ ဖတ်မယ့် စာသား ထည့်ပါ / paste လုပ်ပါ..." style="width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.75);padding:11px;font-size:14.5px;font-family:inherit;resize:vertical;box-shadow:inset 0 2px 6px rgba(90,90,140,.10)"></textarea>
+    <div id="promptView" style="position:relative;height:230px;overflow:hidden;border-radius:16px;margin-top:11px;background:linear-gradient(180deg,#141419,#1e1e28);box-shadow:inset 0 4px 18px rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.35)">
+      <div id="promptText" style="position:absolute;left:0;right:0;top:230px;padding:0 20px;color:#ffe98a;font-size:26px;font-weight:800;line-height:1.9;text-align:center;white-space:pre-wrap">စာသားထည့်ပြီး ▶ နှိပ်ပါ — စာက အပေါ်ကို ဖြည်းဖြည်း ရွေ့သွားမယ် 📜</div>
+      <div style="position:absolute;left:0;right:0;top:46%;border-top:2px dashed rgba(229,57,53,.55);pointer-events:none"></div>
+    </div>
+    <div class="rowbtns">
+      <button class="btn gold" id="promptPlay">▶ ရွေ့မယ်</button>
+      <button class="btn" id="promptReset">↺ အစက ပြန်ရွေ့</button>
+    </div>
+    <div class="opt"><span>🏃 ရွေ့နှုန်း (နှေး ↔ မြန်)</span><span style="display:flex;align-items:center;gap:9px"><span style="font-size:12px;color:#6a6a75">🐢 ဖြည်း</span><input type="range" id="speedRange" min="10" max="160" step="5" value="45" style="width:130px;accent-color:#d4af37"><span style="font-size:12px;color:#6a6a75">မြန် 🐇</span><b id="speedVal">45</b></span></div>
+    <div class="opt"><span>🔠 စာလုံးအရွယ်</span><span style="display:flex;align-items:center;gap:9px"><input type="range" id="fontRange" min="18" max="42" step="2" value="26" style="width:130px;accent-color:#d4af37"><b id="fontVal">26px</b></span></div>
+    <p style="color:#6a6a75;font-size:12.5px;line-height:1.65;margin:8px 0 0">💡 ဖတ်တဲ့ အလယ်မျဉ်းက အနီစင်းနေရာပဲ — စာက အဲ့မျဉ်းကို ဖြတ်ပြီး အပေါ် တက်သွားမယ်။ အသံသွင်းနေတုန်းလည်း prompter က ဆက်ရွေ့နေတယ်၊ နှစ်ခု တပြိုင်နက် သုံးလို့ရတယ်။</p>
+  </div>
+
+  <div class="glass">
     <canvas id="wave" width="640" height="90"></canvas>
     <div class="timer" id="timer">00:00</div>
     <div class="status" id="status">အဆင်သင့်ဖြစ်ပြီ — Record နှိပ်ပြီး စပြောပါ</div>
@@ -256,6 +272,19 @@ async function downloadBlob(blob,base){
   const a=document.createElement('a'); a.href=URL.createObjectURL(out); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
 $('dlBtn').onclick=async()=>{ if(!rawBlob) return; $('dlBtn').textContent='⏳ ပြင်ဆင်နေတယ်...'; await downloadBlob(rawBlob,'pk-voice'); $('dlBtn').textContent='⬇ ဒေါင်းမယ်'; };
+
+/* ---------- teleprompter ---------- */
+let pPos=230, pPlaying=false, pRaf=null, pLast=0;
+const pView=$('promptView'), pText=$('promptText');
+function pSetText(){ const v=$('promptInput').value.trim(); pText.textContent=v||'စာသားထည့်ပြီး ▶ နှိပ်ပါ — စာက အပေါ်ကို ဖြည်းဖြည်း ရွေ့သွားမယ် 📜'; }
+$('promptInput').addEventListener('input',()=>{ pSetText(); pReset(); });
+function pReset(){ pPos=pView.clientHeight; pText.style.top=pPos+'px'; }
+function pLoop(ts){ if(!pPlaying) return; if(!pLast) pLast=ts; const dt=(ts-pLast)/1000; pLast=ts; const speed=parseFloat($('speedRange').value); pPos-=speed*dt; const limit=-(pText.scrollHeight+20); if(pPos<limit){ pPos=limit; pPlaying=false; $('promptPlay').textContent='▶ ရွေ့မယ်'; pText.style.top=pPos+'px'; return; } pText.style.top=pPos+'px'; pRaf=requestAnimationFrame(pLoop); }
+$('promptPlay').onclick=()=>{ if(pPlaying){ pPlaying=false; cancelAnimationFrame(pRaf); $('promptPlay').textContent='▶ ရွေ့မယ်'; } else { if(pPos<=-(pText.scrollHeight)) pReset(); pPlaying=true; pLast=0; $('promptPlay').textContent='⏸ ခဏရပ်'; pRaf=requestAnimationFrame(pLoop); } };
+$('promptReset').onclick=()=>{ pPlaying=false; cancelAnimationFrame(pRaf); $('promptPlay').textContent='▶ ရွေ့မယ်'; pReset(); };
+$('speedRange').oninput=()=>{ $('speedVal').textContent=$('speedRange').value; };
+$('fontRange').oninput=()=>{ $('fontVal').textContent=$('fontRange').value+'px'; pText.style.fontSize=$('fontRange').value+'px'; };
+pReset();
 
 openDB().then(renderHistory).catch(()=>renderHistory());
 </script>
