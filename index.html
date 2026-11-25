@@ -105,6 +105,14 @@
   </div>
 
   <div class="glass">
+    <div class="cardhead"><div class="icon3d blue">🔭</div><div><h3>အဝေးဖမ်း Mode</h3><p>အဝေးက အသံကို အသံချဲ့ပြီး ဖမ်းတယ် — ဖုန်းကို အလယ်မှာထားပြီး အခန်းထဲက ပြောလို့ရတယ်</p></div></div>
+    <div class="opt"><span>🔭 အဝေးဖမ်း Mode (Gain အမြင့် + Compressor)</span><div class="toggle" id="tFar"></div></div>
+    <div class="opt"><span>🔊 Mic Gain ချဲ့အား</span><span style="display:flex;align-items:center;gap:9px"><input type="range" id="gainRange" min="1" max="5" step="0.5" value="1" style="width:130px;accent-color:#d4af37"><b id="gainVal">1x</b></span></div>
+    <div class="opt"><span>📶 အသံအဆင့် (Live)</span><span style="flex:1;max-width:200px;height:12px;background:rgba(120,120,160,.18);border-radius:99px;overflow:hidden;display:inline-block;vertical-align:middle"><i id="levelBar" style="display:block;height:100%;width:0%;background:linear-gradient(90deg,#4ade80,#d4af37,#e53935);border-radius:99px;transition:width .08s"></i></span></div>
+    <p style="color:#6a6a75;font-size:12.5px;line-height:1.65;margin:8px 0 0">⚠️ အမှန်အတိုင်း: Gain ချဲ့ရင် အသံရော ပတ်ဝန်းကျင်ဆူညံသံရော အတူ ချဲ့တယ်။ အဝေးဖမ်းကို 2x–3x လောက်က အကောင်းဆုံး၊ 5x က အရမ်းဝေးမှပဲ သုံးပါ။ ဒေါင်းတဲ့အခါ Normalize ကလည်း အသံကို ထပ်ညှိပေးတယ်။</p>
+  </div>
+
+  <div class="glass">
     <div class="cardhead"><div class="icon3d blue">🎛️</div><div><h3>Preset နဲ့ Format</h3><p>နားထောင်မှုအရသာနဲ့ ဒေါင်း format ရွေးပါ</p></div></div>
     <div class="presets" id="presets">
       <span class="preset sel" data-p="podcast">🎧 Podcast</span>
@@ -143,7 +151,11 @@ function fmtT(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60
 function setStatus(t){$('status').textContent=t}
 function drawIdle(){wctx.clearRect(0,0,wave.width,wave.height);wctx.strokeStyle='#c9a227';wctx.globalAlpha=.5;wctx.beginPath();wctx.moveTo(0,45);wctx.lineTo(wave.width,45);wctx.stroke();wctx.globalAlpha=1}
 drawIdle();
-function drawWave(){ if(!analyser) return; const data=new Uint8Array(analyser.frequencyBinCount); const loop=()=>{ analyser.getByteTimeDomainData(data); wctx.clearRect(0,0,wave.width,wave.height); wctx.strokeStyle='#c9a227'; wctx.lineWidth=2; wctx.beginPath(); const step=wave.width/data.length; data.forEach((v,i)=>{ const y=(v/255)*wave.height; i===0?wctx.moveTo(0,y):wctx.lineTo(i*step,y); }); wctx.stroke(); raf=requestAnimationFrame(loop); }; loop(); }
+function drawWave(){ if(!analyser) return; const data=new Uint8Array(analyser.frequencyBinCount); const loop=()=>{ analyser.getByteTimeDomainData(data); wctx.clearRect(0,0,wave.width,wave.height); wctx.strokeStyle='#c9a227'; wctx.lineWidth=2; wctx.beginPath(); const step=wave.width/data.length; let sum=0; data.forEach((v,i)=>{ const y=(v/255)*wave.height; sum+=Math.abs(v-128); i===0?wctx.moveTo(0,y):wctx.lineTo(i*step,y); }); wctx.stroke(); const lvl=Math.min(100,(sum/data.length)/28*100); const lb=$('levelBar'); if(lb) lb.style.width=lvl+'%'; raf=requestAnimationFrame(loop); }; loop(); }
+let gainNode=null;
+function currentGain(){ return $('tFar').classList.contains('on') ? Math.max(parseFloat($('gainRange').value),3) : parseFloat($('gainRange').value); }
+$('gainRange').oninput=()=>{ const far=$('tFar').classList.contains('on'); $('gainVal').textContent=(far?Math.max(parseFloat($('gainRange').value),3):$('gainRange').value)+'x'; if(gainNode) gainNode.gain.value=currentGain(); };
+$('tFar').addEventListener('click',()=>{ setTimeout(()=>{ $('gainVal').textContent=currentGain()+'x'; if(gainNode) gainNode.gain.value=currentGain(); },0); });
 function tick(){ timerInt=setInterval(()=>{ if(!paused){ elapsed=Date.now()-startAt; $('timer').textContent=fmtT(elapsed/1000);} },250); }
 
 /* ---------- IndexedDB history ---------- */
@@ -179,14 +191,19 @@ async function startRec(){
   try{ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:$('tEcho').classList.contains('on'),noiseSuppression:$('tNoise').classList.contains('on'),autoGainControl:$('tGain').classList.contains('on')}}); }
   catch(e){ setStatus('❌ မိုက် permission မရဘူး — browser မှာ Allow ပေးပါ'); return; }
   audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  const src=audioCtx.createMediaStreamSource(stream); analyser=audioCtx.createAnalyser(); analyser.fftSize=2048; src.connect(analyser);
-  chunks=[]; recorder=new MediaRecorder(stream);
+  const src=audioCtx.createMediaStreamSource(stream); analyser=audioCtx.createAnalyser(); analyser.fftSize=2048;
+  const hp=audioCtx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=70;
+  gainNode=audioCtx.createGain(); gainNode.gain.value=currentGain();
+  const comp=audioCtx.createDynamicsCompressor(); comp.threshold.value=-18; comp.ratio.value=6; comp.attack.value=0.003; comp.release.value=0.25;
+  const dest=audioCtx.createMediaStreamDestination();
+  src.connect(hp); hp.connect(gainNode); gainNode.connect(comp); comp.connect(analyser); comp.connect(dest);
+  chunks=[]; recorder=new MediaRecorder(dest.stream);
   recorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
   recorder.onstop=onStopped;
   recorder.start(250); paused=false; startAt=Date.now(); elapsed=0; tick(); drawWave();
   $('recBtn').classList.add('rec'); $('recLabel').textContent='REC';
   $('pauseBtn').disabled=false; $('stopBtn').disabled=false;
-  setStatus('🔴 သွင်းနေပြီ... ပါးစပ်နဲ့ 15–20 cm ခွာပြောပါ');
+  setStatus($('tFar').classList.contains('on') ? '🔭 အဝေးဖမ်း Mode — Gain '+currentGain()+'x နဲ့ သွင်းနေပြီ၊ အဝေးကနေ ပြောလို့ရတယ်' : '🔴 သွင်းနေပြီ... ပါးစပ်နဲ့ 15–20 cm ခွာပြောပါ');
 }
 async function onStopped(){
   clearInterval(timerInt); cancelAnimationFrame(raf); drawIdle();
