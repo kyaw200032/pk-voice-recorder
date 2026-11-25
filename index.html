@@ -116,8 +116,8 @@
     <div class="opt"><span>🔇 Noise Suppression <span class="pill">အဓိက</span></span><div class="toggle on" id="tNoise"></div></div>
     <div class="opt"><span>🔊 Echo Cancellation</span><div class="toggle on" id="tEcho"></div></div>
     <div class="opt"><span>🎚️ Auto Gain (အသံညှိ)</span><div class="toggle on" id="tGain"></div></div>
-    <div class="opt"><span>✂️ တိတ်ဆိတ်ပိုင်း Auto-trim (ဒေါင်းတဲ့အခါ)</span><div class="toggle on" id="tTrim"></div></div>
-    <div class="opt"><span>📈 အသံ Normalize (ဒေါင်းတဲ့အခါ)</span><div class="toggle on" id="tNorm"></div></div>
+    <div class="opt"><span>✂️ တိတ်ဆိတ်ပိုင်း Auto-trim (ရပ်တာနဲ့ တန်းရှင်းတယ်)</span><div class="toggle on" id="tTrim"></div></div>
+    <div class="opt"><span>📈 အသံ Normalize (ရပ်တာနဲ့ တန်းညှိတယ်)</span><div class="toggle on" id="tNorm"></div></div>
   </div>
 
   <div class="glass">
@@ -142,7 +142,12 @@
   </div>
 
   <div class="glass" id="result">
-    <div class="cardhead"><div class="icon3d green">✅</div><div><h3>အခုနကသွင်းလိုက်တာ</h3><p>History ထဲလည်း သိမ်းပြီးပြီ</p></div></div>
+    <div class="cardhead"><div class="icon3d green">✅</div><div><h3>အခုနကသွင်းလိုက်တာ</h3><p>ရှင်းပြီးသားကို အရင် နားထောင်ကြည့် — ကြိုက်မှ ဒေါင်း၊ မကြိုက်ရင် ပြန်သွင်း/ဖျက်လို့ရတယ်</p></div></div>
+    <div class="rowbtns" style="margin:2px 0 4px">
+      <button class="btn gold" id="abClean">✨ ရှင်းပြီးသား (ဒေါင်းမယ့်ဟာ)</button>
+      <button class="btn" id="abRaw">🎙️ မူရင်း (မရှင်းရသေး)</button>
+    </div>
+    <p id="procNote" style="color:#6a6a75;font-size:12.5px;margin:4px 0 0"></p>
     <audio id="player" controls></audio>
     <div class="rowbtns">
       <button class="btn gold" id="dlBtn">⬇ ဒေါင်းမယ်</button>
@@ -221,20 +226,42 @@ async function startRec(){
   $('pauseBtn').disabled=false; $('stopBtn').disabled=false;
   setStatus($('tFar').classList.contains('on') ? '🔭 အဝေးဖမ်း Mode — Gain '+currentGain()+'x နဲ့ သွင်းနေပြီ၊ အဝေးကနေ ပြောလို့ရတယ်' : '🔴 သွင်းနေပြီ... ပါးစပ်နဲ့ 15–20 cm ခွာပြောပါ');
 }
+let processed=null, cleanUrl=null;
 async function onStopped(){
   clearInterval(timerInt); cancelAnimationFrame(raf); drawIdle();
   if(stream) stream.getTracks().forEach(t=>t.stop());
   rawBlob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});
   if(rawUrl) URL.revokeObjectURL(rawUrl);
   rawUrl=URL.createObjectURL(rawBlob);
-  $('player').src=rawUrl;
-  $('fileInfo').textContent='အရှည် '+fmtT(elapsed/1000)+' • မူရင်း '+(rawBlob.size/1024).toFixed(0)+' KB';
   $('result').classList.add('show');
   $('recBtn').classList.remove('rec'); $('recLabel').textContent='RECORD';
   $('pauseBtn').disabled=true; $('stopBtn').disabled=true;
-  if(db){ const now=new Date(); await dbAdd({name:'အသံသွင်း '+now.toLocaleDateString()+' '+now.toLocaleTimeString(), date:now.getTime(), duration:elapsed, blob:rawBlob}); await renderHistory(); setStatus('✅ ပြီးပြီ — History ထဲ သိမ်းပြီးပြီ၊ နောက်တစ်ပုဒ် ထပ်သွင်းလို့ရပြီ'); }
-  else setStatus('✅ ပြီးပြီ — နားထောင်ကြည့်ပြီး ဒေါင်းလို့ရပြီ');
+  processed=null; if(cleanUrl) URL.revokeObjectURL(cleanUrl); cleanUrl=null;
+  $('procNote').textContent='⏳ တိတ်ဆိတ်ပိုင်း ဖြတ် + အသံညှိ ရှင်းနေတယ်...';
+  $('player').src=rawUrl;
+  setStatus('⏳ ရှင်းနေတယ် — ခဏစောင့်');
+  let histBlob=rawBlob, histDur=elapsed;
+  try{
+    const p=await processedBuffer(rawBlob);
+    const baked=new Float32Array(p.data.length); for(let i=0;i<p.data.length;i++) baked[i]=Math.max(-1,Math.min(1,p.data[i]*p.gain));
+    processed={data:baked, sr:p.sr};
+    const wavBlob=encodeWAV(baked,p.sr,1);
+    cleanUrl=URL.createObjectURL(wavBlob);
+    $('player').src=cleanUrl;
+    const cleanSec=baked.length/p.sr, rawSec=elapsed/1000, cut=Math.max(0,rawSec-cleanSec);
+    $('procNote').textContent='✂️ တိတ်ဆိတ်ပိုင်း '+cut.toFixed(1)+' စက္ကန့် ဖြတ်ပြီး • 📈 အသံညှိပြီး — အခု နားထောင်နေတာ ဒေါင်းမယ့် ရှင်းပြီးသား version ပဲ။ ကြိုက်မှ ဒေါင်းပါ 👍';
+    $('fileInfo').textContent='ရှင်းပြီးသား အရှည် '+fmtT(cleanSec)+' (မူရင်း '+fmtT(rawSec)+')';
+    try{ histBlob=encodeMP3(baked,p.sr,1); histDur=Math.round(cleanSec*1000); }catch(e){}
+    setStatus('✅ ရှင်းပြီးပြီ — နားထောင်ကြည့်ပြီး ကြိုက်မှ ဒေါင်းပါ');
+  }catch(e){
+    $('procNote').textContent='⚠️ ရှင်းလို့ မရခဲ့ဘူး — မူရင်းအတိုင်း ပြထားတယ်';
+    $('fileInfo').textContent='အရှည် '+fmtT(elapsed/1000)+' • မူရင်း '+(rawBlob.size/1024).toFixed(0)+' KB';
+    setStatus('✅ ပြီးပြီ — နားထောင်ကြည့်ပြီး ဒေါင်းလို့ရပြီ');
+  }
+  if(db){ const now=new Date(); await dbAdd({name:'အသံသွင်း '+now.toLocaleDateString()+' '+now.toLocaleTimeString(), date:now.getTime(), duration:histDur, blob:histBlob}); await renderHistory(); }
 }
+$('abClean').onclick=()=>{ if(cleanUrl){ $('player').src=cleanUrl; $('player').play(); $('abClean').classList.add('gold'); $('abRaw').classList.remove('gold'); } };
+$('abRaw').onclick=()=>{ if(rawUrl){ $('player').src=rawUrl; $('player').play(); $('abRaw').classList.add('gold'); $('abClean').classList.remove('gold'); } };
 $('recBtn').onclick=()=>{ if(!recorder||recorder.state==='inactive') startRec(); };
 $('pauseBtn').onclick=()=>{ if(!recorder) return; if(recorder.state==='recording'){ recorder.pause(); paused=true; setStatus('⏸ ခဏရပ်ထားတယ်'); } else if(recorder.state==='paused'){ recorder.resume(); paused=false; startAt=Date.now()-elapsed; setStatus('🔴 ပြန်သွင်းနေပြီ...'); } };
 $('stopBtn').onclick=()=>{ if(recorder&&recorder.state!=='inactive') recorder.stop(); };
@@ -271,7 +298,11 @@ async function downloadBlob(blob,base){
   else{ try{ const p=await processedBuffer(blob); out=(f==='wav')?encodeWAV(p.data,p.sr,p.gain):encodeMP3(p.data,p.sr,p.gain); name=base+'.'+f; }catch(e){ out=blob; name=base+'.webm'; } }
   const a=document.createElement('a'); a.href=URL.createObjectURL(out); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 }
-$('dlBtn').onclick=async()=>{ if(!rawBlob) return; $('dlBtn').textContent='⏳ ပြင်ဆင်နေတယ်...'; await downloadBlob(rawBlob,'pk-voice'); $('dlBtn').textContent='⬇ ဒေါင်းမယ်'; };
+$('dlBtn').onclick=async()=>{ if(!rawBlob) return; $('dlBtn').textContent='⏳ ပြင်ဆင်နေတယ်...';
+  const f=$('fmt').value;
+  if(processed && f!=='webm'){ const out=(f==='wav')?encodeWAV(processed.data,processed.sr,1):encodeMP3(processed.data,processed.sr,1); const a=document.createElement('a'); a.href=URL.createObjectURL(out); a.download='pk-voice.'+f; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); }
+  else await downloadBlob(rawBlob,'pk-voice');
+  $('dlBtn').textContent='⬇ ဒေါင်းမယ်'; };
 
 /* ---------- teleprompter ---------- */
 let pPos=230, pPlaying=false, pRaf=null, pLast=0;
