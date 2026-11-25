@@ -4,79 +4,108 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PK Voice Studio — အသံသွင်းစတူဒီယို</title>
-<meta name="description" content="ဖုန်းနဲ့သွင်း၊ noise ရှင်း၊ MP3/WAV ဒေါင်းနိုင်တဲ့ အခမဲ့ အသံသွင်း website">
+<meta name="description" content="ဖုန်းနဲ့သွင်း၊ noise ရှင်း၊ MP3/WAV ဒေါင်းနိုင်တဲ့ အခမဲ့ အသံသွင်း website — History ပါ သိမ်းပေးတယ်">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
 <style>
-  :root{--gold:#d4af37;--gold2:#f1d06b;--bg:#0e0e11;--card:#17171c;--line:#2a2a33;--txt:#f5f2e8;--mut:#a49f8f;--red:#e53935}
   *{box-sizing:border-box}
-  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt)}
-  header{padding:22px 16px 6px;text-align:center;background:linear-gradient(180deg,rgba(212,175,55,.18),transparent)}
-  .logo{color:var(--gold);font-weight:900;letter-spacing:1px;font-size:13px}
-  h1{margin:6px 0 4px;font-size:26px}
-  .sub{color:var(--mut);font-size:14px;line-height:1.6;max-width:560px;margin:0 auto}
-  main{max-width:680px;margin:0 auto;padding:14px 16px 40px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-top:14px}
-  canvas{width:100%;height:90px;display:block;background:#0a0a0d;border-radius:10px}
-  .timer{text-align:center;font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;margin:10px 0 2px}
-  .status{text-align:center;color:var(--mut);font-size:13px;min-height:20px}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1c1c22;min-height:100vh;
+    background:linear-gradient(135deg,#fdfbf7 0%,#eef2ff 35%,#ffeef7 70%,#eafff3 100%);
+    background-attachment:fixed}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(420px 300px at 15% 10%,rgba(212,175,55,.28),transparent 60%),
+               radial-gradient(480px 340px at 85% 20%,rgba(120,140,255,.25),transparent 60%),
+               radial-gradient(520px 380px at 50% 95%,rgba(255,130,190,.20),transparent 60%)}
+  header{position:relative;padding:26px 16px 4px;text-align:center}
+  .logo{color:#9a7b12;font-weight:900;letter-spacing:1.5px;font-size:12px}
+  h1{margin:8px 0 4px;font-size:27px;font-weight:900}
+  .sub{color:#5b5b66;font-size:14px;line-height:1.65;max-width:560px;margin:0 auto}
+  main{position:relative;max-width:680px;margin:0 auto;padding:14px 16px 44px}
+  .glass{background:rgba(255,255,255,.55);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
+    border:1px solid rgba(255,255,255,.85);border-radius:22px;padding:18px;margin-top:16px;
+    box-shadow:0 18px 40px rgba(90,90,140,.14),inset 0 1px 0 rgba(255,255,255,.9)}
+  .icon3d{width:52px;height:52px;border-radius:16px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;flex:none;
+    background:linear-gradient(145deg,#ffffff,#e8ecff);
+    box-shadow:0 10px 18px rgba(90,90,140,.22),inset 0 2px 3px #fff,inset 0 -4px 7px rgba(120,130,200,.25);
+    text-shadow:0 2px 3px rgba(0,0,0,.18)}
+  .icon3d.gold{background:linear-gradient(145deg,#ffe98a,#d4af37);box-shadow:0 10px 18px rgba(160,120,10,.35),inset 0 2px 3px #fff8,inset 0 -4px 7px rgba(120,85,0,.35)}
+  .icon3d.pink{background:linear-gradient(145deg,#ffd3e8,#ff7eb9)}
+  .icon3d.blue{background:linear-gradient(145deg,#cfe4ff,#6ea8ff)}
+  .icon3d.green{background:linear-gradient(145deg,#d2ffe6,#4ade80)}
+  .cardhead{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+  .cardhead h3{margin:0;font-size:16px;font-weight:900}
+  .cardhead p{margin:2px 0 0;color:#6a6a75;font-size:12.5px}
+  canvas{width:100%;height:90px;display:block;background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:inset 0 2px 8px rgba(90,90,140,.10)}
+  .timer{text-align:center;font-size:36px;font-weight:900;font-variant-numeric:tabular-nums;margin:10px 0 2px}
+  .status{text-align:center;color:#6a6a75;font-size:13px;min-height:20px}
   .recwrap{text-align:center}
-  #recBtn{margin:14px auto 4px;width:92px;height:92px;border-radius:50%;border:5px solid rgba(212,175,55,.35);background:var(--red);color:#fff;font-weight:800;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-  #recBtn.rec{background:#222;border-color:var(--red);color:#ff6b6b;animation:pulse 1.2s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,57,53,.5)}100%{box-shadow:0 0 0 18px rgba(229,57,53,0)}}
-  .rowbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px}
-  button.btn{border:1px solid var(--line);background:#1f1f26;color:var(--txt);padding:10px 15px;border-radius:999px;font-size:14px;cursor:pointer;font-weight:700}
-  button.btn.gold{background:var(--gold);color:#111;border-color:var(--gold)}
+  #recBtn{margin:14px auto 4px;width:96px;height:96px;border-radius:50%;cursor:pointer;color:#fff;font-weight:900;font-size:13px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    background:radial-gradient(circle at 32% 28%,#ff9a94,#e53935 58%,#b71c1c);
+    border:3px solid rgba(255,255,255,.9);
+    box-shadow:0 16px 30px rgba(229,57,53,.40),inset 0 3px 6px rgba(255,255,255,.55),inset 0 -8px 14px rgba(90,0,0,.35)}
+  #recBtn.rec{animation:pulse 1.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(229,57,53,.45),inset 0 3px 6px rgba(255,255,255,.55)}100%{box-shadow:0 0 0 20px rgba(229,57,53,0),inset 0 3px 6px rgba(255,255,255,.55)}}
+  .rowbtns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+  button.btn{border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.7);backdrop-filter:blur(8px);color:#22222a;padding:10px 15px;border-radius:999px;font-size:14px;cursor:pointer;font-weight:800;box-shadow:0 8px 16px rgba(90,90,140,.13),inset 0 1px 0 #fff}
+  button.btn.gold{background:linear-gradient(145deg,#ffe98a,#d4af37);color:#231a00;border-color:#ffe98a}
   button.btn:disabled{opacity:.45;cursor:not-allowed}
-  .opt{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px dashed var(--line);font-size:14px}
+  .opt{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px dashed rgba(120,120,160,.25);font-size:14px}
   .opt:first-of-type{border-top:none}
-  .toggle{width:42px;height:23px;border-radius:99px;background:#555;position:relative;cursor:pointer;flex:none}
-  .toggle.on{background:var(--gold)}
-  .toggle:after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.15s}
-  .toggle.on:after{left:22px}
-  .presets{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}
-  .preset{padding:7px 12px;border-radius:99px;border:1px solid var(--line);font-size:13px;cursor:pointer}
-  .preset.sel{background:var(--gold);color:#111;font-weight:800;border-color:var(--gold)}
-  select{background:#1f1f26;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:14px}
-  #result{display:none}
-  #result.show{display:block}
+  .toggle{width:44px;height:24px;border-radius:99px;background:#c9c9d4;position:relative;cursor:pointer;flex:none;box-shadow:inset 0 2px 5px rgba(0,0,0,.18)}
+  .toggle.on{background:linear-gradient(145deg,#ffe98a,#d4af37)}
+  .toggle:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 2px 5px rgba(0,0,0,.25)}
+  .toggle.on:after{left:23px}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;margin:6px 0 4px}
+  .preset{padding:8px 13px;border-radius:99px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.6);font-size:13px;cursor:pointer;font-weight:700;box-shadow:0 5px 10px rgba(90,90,140,.10)}
+  .preset.sel{background:linear-gradient(145deg,#ffe98a,#d4af37);color:#231a00;font-weight:900}
+  select{background:rgba(255,255,255,.8);color:#222;border:1px solid rgba(255,255,255,.9);border-radius:10px;padding:7px 9px;font-size:14px}
+  #result{display:none}#result.show{display:block}
   audio{width:100%;margin:10px 0}
-  .note{color:var(--mut);font-size:12.5px;line-height:1.7;text-align:center;margin-top:16px}
-  h3{margin:0 0 8px;font-size:15px}
-  .pill{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(212,175,55,.2);color:var(--gold2);font-weight:800}
+  .note{color:#6a6a75;font-size:12.5px;line-height:1.7;text-align:center;margin-top:18px}
+  .pill{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(212,175,55,.22);color:#8a6d0d;font-weight:900}
+  .hist{display:flex;flex-direction:column;gap:10px}
+  .hitem{display:flex;gap:11px;align-items:flex-start;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.9);border-radius:16px;padding:11px;box-shadow:0 8px 16px rgba(90,90,140,.10)}
+  .hitem .icon3d{width:44px;height:44px;font-size:21px;border-radius:13px}
+  .hmeta{flex:1;min-width:0}
+  .hmeta b{font-size:14px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hmeta span{color:#6a6a75;font-size:12px}
+  .hmeta audio{margin:6px 0 2px;height:34px}
+  .hbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+  .hbtns button{border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.85);border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer;box-shadow:0 4px 8px rgba(90,90,140,.12)}
+  .hbtns button.danger{color:#c62828}
+  .empty{color:#6a6a75;font-size:13.5px;text-align:center;padding:14px 4px;line-height:1.7}
 </style>
 </head>
 <body>
 <header>
   <div class="logo">PK AI HUB • VOICE STUDIO</div>
   <h1>🎙️ အသံသွင်းစတူဒီယို</h1>
-  <p class="sub">စက်မလိုဘူး — ဖုန်းနဲ့သွင်း၊ noise ရှင်း၊ MP3 / WAV ဒေါင်းပါ။<br>အသံဖိုင်က မင်းစက်ထဲမှာပဲ နေတယ်၊ server ကို မတက်ဘူး။</p>
+  <p class="sub">စက်မလိုဘူး — ဖုန်းနဲ့သွင်း၊ noise ရှင်း၊ MP3 / WAV ဒေါင်းပါ။<br>သွင်းထားသမျှ <b>History</b> ထဲမှာ အမြဲ ကျန်နေမယ်၊ အသစ်ထပ်သွင်းလည်း မပျောက်ဘူး။</p>
 </header>
 <main>
-  <div class="card">
+  <div class="glass">
     <canvas id="wave" width="640" height="90"></canvas>
     <div class="timer" id="timer">00:00</div>
     <div class="status" id="status">အဆင်သင့်ဖြစ်ပြီ — Record နှိပ်ပြီး စပြောပါ</div>
-    <div class="recwrap">
-      <button id="recBtn"><span style="font-size:24px">●</span><span id="recLabel">RECORD</span></button>
-    </div>
+    <div class="recwrap"><button id="recBtn"><span style="font-size:26px">●</span><span id="recLabel">RECORD</span></button></div>
     <div class="rowbtns">
       <button class="btn" id="pauseBtn" disabled>⏸ ခဏရပ် / ဆက်သွင်း</button>
-      <button class="btn gold" id="stopBtn" disabled>⏹ ရပ်မယ်</button>
-      <button class="btn" id="resetBtn">↺ အသစ်ပြန်သွင်း</button>
+      <button class="btn gold" id="stopBtn" disabled>⏹ ရပ်ပြီး History ထဲ သိမ်းမယ်</button>
+      <button class="btn" id="resetBtn">↺ Timer ပြန်စမယ်</button>
     </div>
   </div>
 
-  <div class="card">
-    <h3>✨ အသံရှင်းခြင်း (သွင်းကတည်းက browser က ရှင်းပေးတယ်)</h3>
-    <div class="opt"><span>Noise Suppression <span class="pill">အဓိက</span></span><div class="toggle on" id="tNoise"></div></div>
-    <div class="opt"><span>Echo Cancellation</span><div class="toggle on" id="tEcho"></div></div>
-    <div class="opt"><span>Auto Gain (အသံညှိ)</span><div class="toggle on" id="tGain"></div></div>
-    <div class="opt"><span>တိတ်ဆိတ်ပိုင်း Auto-trim (ဒေါင်းတဲ့အခါ)</span><div class="toggle on" id="tTrim"></div></div>
-    <div class="opt"><span>အသံ Normalize (ဒေါင်းတဲ့အခါ)</span><div class="toggle on" id="tNorm"></div></div>
+  <div class="glass">
+    <div class="cardhead"><div class="icon3d gold">✨</div><div><h3>အသံရှင်းခြင်း</h3><p>သွင်းကတည်းက browser က ရှင်းပေးတယ်</p></div></div>
+    <div class="opt"><span>🔇 Noise Suppression <span class="pill">အဓိက</span></span><div class="toggle on" id="tNoise"></div></div>
+    <div class="opt"><span>🔊 Echo Cancellation</span><div class="toggle on" id="tEcho"></div></div>
+    <div class="opt"><span>🎚️ Auto Gain (အသံညှိ)</span><div class="toggle on" id="tGain"></div></div>
+    <div class="opt"><span>✂️ တိတ်ဆိတ်ပိုင်း Auto-trim (ဒေါင်းတဲ့အခါ)</span><div class="toggle on" id="tTrim"></div></div>
+    <div class="opt"><span>📈 အသံ Normalize (ဒေါင်းတဲ့အခါ)</span><div class="toggle on" id="tNorm"></div></div>
   </div>
 
-  <div class="card">
-    <h3>🎚️ Preset နဲ့ Format</h3>
+  <div class="glass">
+    <div class="cardhead"><div class="icon3d blue">🎛️</div><div><h3>Preset နဲ့ Format</h3><p>နားထောင်မှုအရသာနဲ့ ဒေါင်း format ရွေးပါ</p></div></div>
     <div class="presets" id="presets">
       <span class="preset sel" data-p="podcast">🎧 Podcast</span>
       <span class="preset" data-p="natural">🌿 Natural</span>
@@ -86,16 +115,21 @@
     <div class="opt"><span>Download format</span>
       <select id="fmt"><option value="mp3">MP3 (ဖိုင်သေး)</option><option value="wav">WAV (quality အကောင်းဆုံး)</option><option value="webm">WebM (မူရင်း)</option></select>
     </div>
-    <div class="opt"><span>မှတ်ချက်</span><span style="color:var(--mut);font-size:13px">Preset က နားထောင်မှုအရသာ (EQ) အတွက်ပါ</span></div>
   </div>
 
-  <div class="card" id="result">
-    <h3>✅ သွင်းပြီးပြီ</h3>
+  <div class="glass" id="result">
+    <div class="cardhead"><div class="icon3d green">✅</div><div><h3>အခုနကသွင်းလိုက်တာ</h3><p>History ထဲလည်း သိမ်းပြီးပြီ</p></div></div>
     <audio id="player" controls></audio>
     <div class="rowbtns">
       <button class="btn gold" id="dlBtn">⬇ ဒေါင်းမယ်</button>
-      <span id="fileInfo" style="color:var(--mut);font-size:13px;align-self:center"></span>
+      <span id="fileInfo" style="color:#6a6a75;font-size:13px;align-self:center"></span>
     </div>
+  </div>
+
+  <div class="glass">
+    <div class="cardhead"><div class="icon3d pink">🗂️</div><div><h3>History — သွင်းထားသမျှ</h3><p>ဒီစက်ထဲမှာပဲ သိမ်းတယ် (IndexedDB) — page ပိတ်ပြီး ပြန်ဖွင့်လည်း ရှိတယ်</p></div>
+    <button class="btn" id="clearBtn" style="margin-left:auto;padding:7px 12px;font-size:12.5px">🧹 အကုန်ဖျက်</button></div>
+    <div class="hist" id="histList"><div class="empty">ဘာမှ မသွင်းရသေးဘူး — ပထမဆုံး တစ်ပုဒ် သွင်းကြည့်လိုက် 🎙️</div></div>
   </div>
 
   <p class="note">💡 အသံကောင်းဖို့: အဝတ်ဘီရို/စောင်ပုံထဲ ဝင်ပြော၊ ဖုန်းကို ပါးစပ်ကနေ 15–20 cm ခွာထား၊ ပန်ကာပိတ်ထားပါ။<br>PK Voice Studio — PK AI Hub</p>
@@ -107,15 +141,43 @@ const $=id=>document.getElementById(id);
 const wave=$('wave'), wctx=wave.getContext('2d');
 function fmtT(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 function setStatus(t){$('status').textContent=t}
-function drawIdle(){wctx.clearRect(0,0,wave.width,wave.height);wctx.strokeStyle='#d4af37';wctx.globalAlpha=.4;wctx.beginPath();wctx.moveTo(0,45);wctx.lineTo(wave.width,45);wctx.stroke();wctx.globalAlpha=1}
+function drawIdle(){wctx.clearRect(0,0,wave.width,wave.height);wctx.strokeStyle='#c9a227';wctx.globalAlpha=.5;wctx.beginPath();wctx.moveTo(0,45);wctx.lineTo(wave.width,45);wctx.stroke();wctx.globalAlpha=1}
 drawIdle();
-function drawWave(){ if(!analyser) return; const data=new Uint8Array(analyser.frequencyBinCount); const loop=()=>{ analyser.getByteTimeDomainData(data); wctx.clearRect(0,0,wave.width,wave.height); wctx.strokeStyle='#d4af37'; wctx.lineWidth=2; wctx.beginPath(); const step=wave.width/data.length; data.forEach((v,i)=>{ const y=(v/255)*wave.height; i===0?wctx.moveTo(0,y):wctx.lineTo(i*step,y); }); wctx.stroke(); raf=requestAnimationFrame(loop); }; loop(); }
+function drawWave(){ if(!analyser) return; const data=new Uint8Array(analyser.frequencyBinCount); const loop=()=>{ analyser.getByteTimeDomainData(data); wctx.clearRect(0,0,wave.width,wave.height); wctx.strokeStyle='#c9a227'; wctx.lineWidth=2; wctx.beginPath(); const step=wave.width/data.length; data.forEach((v,i)=>{ const y=(v/255)*wave.height; i===0?wctx.moveTo(0,y):wctx.lineTo(i*step,y); }); wctx.stroke(); raf=requestAnimationFrame(loop); }; loop(); }
 function tick(){ timerInt=setInterval(()=>{ if(!paused){ elapsed=Date.now()-startAt; $('timer').textContent=fmtT(elapsed/1000);} },250); }
 
+/* ---------- IndexedDB history ---------- */
+let db=null;
+function openDB(){ return new Promise((res,rej)=>{ const r=indexedDB.open('pk-voice-studio',1); r.onupgradeneeded=()=>{ r.result.createObjectStore('recordings',{keyPath:'id',autoIncrement:true}); }; r.onsuccess=()=>{ db=r.result; res(); }; r.onerror=()=>rej(r.error); }); }
+function dbAll(){ return new Promise(res=>{ const out=[]; const tx=db.transaction('recordings','readonly'); const cur=tx.objectStore('recordings').openCursor(null,'prev'); cur.onsuccess=e=>{ const c=e.target.result; if(c){ out.push(c.value); c.continue(); } else res(out); }; cur.onerror=()=>res(out); }); }
+function dbAdd(rec){ return new Promise(res=>{ const tx=db.transaction('recordings','readwrite'); tx.objectStore('recordings').add(rec); tx.oncomplete=res; tx.onerror=res; }); }
+function dbDel(id){ return new Promise(res=>{ const tx=db.transaction('recordings','readwrite'); tx.objectStore('recordings').delete(id); tx.oncomplete=res; tx.onerror=res; }); }
+function dbClear(){ return new Promise(res=>{ const tx=db.transaction('recordings','readwrite'); tx.objectStore('recordings').clear(); tx.oncomplete=res; tx.onerror=res; }); }
+
+async function renderHistory(){
+  const list=$('histList'); if(!db){ list.innerHTML='<div class="empty">History မဖွင့်နိုင်ဘူး (browser storage ပိတ်ထားလို့ ဖြစ်နိုင်တယ်)</div>'; return; }
+  const items=await dbAll();
+  if(!items.length){ list.innerHTML='<div class="empty">ဘာမှ မသွင်းရသေးဘူး — ပထမဆုံး တစ်ပုဒ် သွင်းကြည့်လိုက် 🎙️</div>'; return; }
+  list.innerHTML='';
+  items.forEach(it=>{
+    const url=URL.createObjectURL(it.blob);
+    const d=new Date(it.date);
+    const div=document.createElement('div'); div.className='hitem';
+    div.innerHTML='<div class="icon3d gold">🎵</div><div class="hmeta"><b></b><span></span><audio controls src="'+url+'"></audio><div class="hbtns"><button data-act="dl">⬇ ဒေါင်း ('+$('fmt').value.toUpperCase()+')</button><button data-act="del" class="danger">🗑️ ဖျက်</button></div></div>';
+    div.querySelector('b').textContent=it.name;
+    div.querySelector('span').textContent=d.toLocaleDateString()+' '+d.toLocaleTimeString()+' • အရှည် '+fmtT(it.duration/1000)+' • '+(it.blob.size/1024).toFixed(0)+' KB';
+    div.querySelector('[data-act="del"]').onclick=async()=>{ await dbDel(it.id); renderHistory(); };
+    div.querySelector('[data-act="dl"]').onclick=async()=>{ await downloadBlob(it.blob,'pk-voice-'+it.id); };
+    list.appendChild(div);
+  });
+}
+$('clearBtn').onclick=async()=>{ if(!db) return; await dbClear(); renderHistory(); setStatus('🧹 History အကုန် ဖျက်ပြီးပြီ'); };
+$('fmt').onchange=()=>renderHistory();
+
+/* ---------- recording ---------- */
 async function startRec(){
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:$('tEcho').classList.contains('on'),noiseSuppression:$('tNoise').classList.contains('on'),autoGainControl:$('tGain').classList.contains('on')}});
-  }catch(e){ setStatus('❌ မိုက် permission မရဘူး — browser မှာ Allow ပေးပါ'); return; }
+  try{ stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:$('tEcho').classList.contains('on'),noiseSuppression:$('tNoise').classList.contains('on'),autoGainControl:$('tGain').classList.contains('on')}}); }
+  catch(e){ setStatus('❌ မိုက် permission မရဘူး — browser မှာ Allow ပေးပါ'); return; }
   audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   const src=audioCtx.createMediaStreamSource(stream); analyser=audioCtx.createAnalyser(); analyser.fftSize=2048; src.connect(analyser);
   chunks=[]; recorder=new MediaRecorder(stream);
@@ -126,7 +188,7 @@ async function startRec(){
   $('pauseBtn').disabled=false; $('stopBtn').disabled=false;
   setStatus('🔴 သွင်းနေပြီ... ပါးစပ်နဲ့ 15–20 cm ခွာပြောပါ');
 }
-function onStopped(){
+async function onStopped(){
   clearInterval(timerInt); cancelAnimationFrame(raf); drawIdle();
   if(stream) stream.getTracks().forEach(t=>t.stop());
   rawBlob=new Blob(chunks,{type:recorder.mimeType||'audio/webm'});
@@ -137,18 +199,19 @@ function onStopped(){
   $('result').classList.add('show');
   $('recBtn').classList.remove('rec'); $('recLabel').textContent='RECORD';
   $('pauseBtn').disabled=true; $('stopBtn').disabled=true;
-  setStatus('✅ ပြီးပြီ — နားထောင်ကြည့်ပြီး ဒေါင်းလို့ရပြီ');
+  if(db){ const now=new Date(); await dbAdd({name:'အသံသွင်း '+now.toLocaleDateString()+' '+now.toLocaleTimeString(), date:now.getTime(), duration:elapsed, blob:rawBlob}); await renderHistory(); setStatus('✅ ပြီးပြီ — History ထဲ သိမ်းပြီးပြီ၊ နောက်တစ်ပုဒ် ထပ်သွင်းလို့ရပြီ'); }
+  else setStatus('✅ ပြီးပြီ — နားထောင်ကြည့်ပြီး ဒေါင်းလို့ရပြီ');
 }
 $('recBtn').onclick=()=>{ if(!recorder||recorder.state==='inactive') startRec(); };
-$('pauseBtn').onclick=()=>{ if(!recorder) return; if(recorder.state==='recording'){ recorder.pause(); paused=true; startAt=startAt; setStatus('⏸ ခဏရပ်ထားတယ်'); } else if(recorder.state==='paused'){ recorder.resume(); paused=false; startAt=Date.now()-elapsed; setStatus('🔴 ပြန်သွင်းနေပြီ...'); } };
+$('pauseBtn').onclick=()=>{ if(!recorder) return; if(recorder.state==='recording'){ recorder.pause(); paused=true; setStatus('⏸ ခဏရပ်ထားတယ်'); } else if(recorder.state==='paused'){ recorder.resume(); paused=false; startAt=Date.now()-elapsed; setStatus('🔴 ပြန်သွင်းနေပြီ...'); } };
 $('stopBtn').onclick=()=>{ if(recorder&&recorder.state!=='inactive') recorder.stop(); };
-$('resetBtn').onclick=()=>{ if(recorder&&recorder.state!=='inactive') recorder.stop(); rawBlob=null; $('result').classList.remove('show'); elapsed=0; $('timer').textContent='00:00'; setStatus('အဆင်သင့်ဖြစ်ပြီ — Record နှိပ်ပြီး စပြောပါ'); };
+$('resetBtn').onclick=()=>{ elapsed=0; $('timer').textContent='00:00'; if(!recorder||recorder.state==='inactive') setStatus('အဆင်သင့်ဖြစ်ပြီ — Record နှိပ်ပြီး စပြောပါ'); };
 document.querySelectorAll('.toggle').forEach(t=>t.onclick=()=>t.classList.toggle('on'));
 document.querySelectorAll('.preset').forEach(p=>p.onclick=()=>{ document.querySelectorAll('.preset').forEach(x=>x.classList.remove('sel')); p.classList.add('sel'); });
 
-async function processedBuffer(){
-  const arr=await rawBlob.arrayBuffer();
-  const ctx=new (window.OfflineAudioContext||window.webkitOfflineAudioContext)(1,1,44100);
+/* ---------- processing + download ---------- */
+async function processedBuffer(blob){
+  const arr=await blob.arrayBuffer();
   let buf=await new AudioContext().decodeAudioData(arr);
   let ch=buf.getChannelData(0), sr=buf.sampleRate, start=0, end=ch.length;
   if($('tTrim').classList.contains('on')){ const th=0.015; while(start<end&&Math.abs(ch[start])<th) start++; while(end>start&&Math.abs(ch[end-1])<th) end--; start=Math.max(0,start-Math.floor(sr*0.05)); end=Math.min(ch.length,end+Math.floor(sr*0.05)); }
@@ -169,13 +232,15 @@ function encodeMP3(data,sr,gain){
   const end=enc.flush(); if(end.length) parts.push(new Int8Array(end));
   return new Blob(parts,{type:'audio/mpeg'});
 }
-$('dlBtn').onclick=async()=>{
-  if(!rawBlob) return;
-  const f=$('fmt').value; let blob, name;
-  if(f==='webm'){ blob=rawBlob; name='pk-voice.webm'; }
-  else{ $('dlBtn').textContent='⏳ ပြင်ဆင်နေတယ်...'; try{ const p=await processedBuffer(); blob=(f==='wav')?encodeWAV(p.data,p.sr,p.gain):encodeMP3(p.data,p.sr,p.gain); name='pk-voice.'+f; }catch(e){ blob=rawBlob; name='pk-voice.webm'; } $('dlBtn').textContent='⬇ ဒေါင်းမယ်'; }
-  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-};
+async function downloadBlob(blob,base){
+  const f=$('fmt').value; let out, name;
+  if(f==='webm'){ out=blob; name=base+'.webm'; }
+  else{ try{ const p=await processedBuffer(blob); out=(f==='wav')?encodeWAV(p.data,p.sr,p.gain):encodeMP3(p.data,p.sr,p.gain); name=base+'.'+f; }catch(e){ out=blob; name=base+'.webm'; } }
+  const a=document.createElement('a'); a.href=URL.createObjectURL(out); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+$('dlBtn').onclick=async()=>{ if(!rawBlob) return; $('dlBtn').textContent='⏳ ပြင်ဆင်နေတယ်...'; await downloadBlob(rawBlob,'pk-voice'); $('dlBtn').textContent='⬇ ဒေါင်းမယ်'; };
+
+openDB().then(renderHistory).catch(()=>renderHistory());
 </script>
 </body>
 </html>
